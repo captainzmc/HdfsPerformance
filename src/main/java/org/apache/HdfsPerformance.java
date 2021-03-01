@@ -134,8 +134,6 @@ public class HdfsPerformance {
               buffer = new byte[bytesToRead];
             }
           }
-          out.hsync();
-          out.close();
           future.complete(true);
         } catch (Throwable e) {
           LOG.error("exception", e);
