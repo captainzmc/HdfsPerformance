@@ -160,6 +160,7 @@ public class HdfsPerformance {
 
        Configuration conf = new Configuration();
        conf.set("fs.defaultFS", "hdfs://localhost:9000");
+       conf.setInt("dfs.replicatio", 1);
        FileSystem fs = FileSystem.get(conf);
 
        List<FSDataOutputStream> outs = new ArrayList<>();
