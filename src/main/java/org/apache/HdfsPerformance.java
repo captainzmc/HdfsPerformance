@@ -31,6 +31,7 @@ public class HdfsPerformance {
   private static long numFiles;
   private static long fileSizeInBytes = 128000000;
   private static long bufferSizeInBytes = 4000000;
+  private static long maxThreadNum = 1000;
   private static String[] storageDir = new String[]{"/data/ratis/", "/data1/ratis/", "/data2/ratis/", "/data3/ratis/",
       "/data4/ratis/", "/data5/ratis/", "/data6/ratis/", "/data7/ratis/", "/data8/ratis/", "/data9/ratis/",
       "/data10/ratis/", "/data11/ratis/"};
@@ -148,19 +149,26 @@ public class HdfsPerformance {
     return fileMap;
   }
 
+  public static int getNumThread() {
+    return (int)(numFiles < maxThreadNum ? numFiles : maxThreadNum);
+  }
+
   public static void main(String[] args) {
      try {
        numFiles = Integer.parseInt(args[0]);
+       fileSizeInBytes = Integer.parseInt(args[1]);
+       bufferSizeInBytes = Integer.parseInt(args[2]);
        System.out.println("numFiles:" + numFiles);
        createDirs();
-       final ExecutorService executor = Executors.newFixedThreadPool(1000);
+       final ExecutorService executor = Executors.newFixedThreadPool(getNumThread());
 
        List<String> paths = generateFiles(executor);
        dropCache();
 
        Configuration conf = new Configuration();
        conf.set("fs.defaultFS", "hdfs://localhost:9000");
-       conf.setInt("dfs.replicatio", 1);
+       conf.setInt("dfs.replication", 3);
+       //conf.setInt("dfs.replication", 1);
        FileSystem fs = FileSystem.get(conf);
 
        List<FSDataOutputStream> outs = new ArrayList<>();
@@ -171,7 +179,9 @@ public class HdfsPerformance {
          outs.add(outputStream);
        }
 
+       System.out.println("Start write now");
        long start = System.currentTimeMillis();
+
        // Write key with random name.
        Map<String, CompletableFuture<Boolean>> map = writeByHeapByteBuffer(paths, outs, executor);
 
