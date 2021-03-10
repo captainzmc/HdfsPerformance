@@ -171,6 +171,9 @@ public class HdfsPerformance {
        //conf.setInt("dfs.replication", 1);
        FileSystem fs = FileSystem.get(conf);
 
+       System.out.println("Start write now");
+       long start = System.currentTimeMillis();
+
        List<FSDataOutputStream> outs = new ArrayList<>();
        for (int i = 0; i < paths.size(); i ++) {
          Path dstPath = new Path(paths.get(i)); //目标路径
@@ -178,9 +181,6 @@ public class HdfsPerformance {
          FSDataOutputStream outputStream = fs.create(dstPath);
          outs.add(outputStream);
        }
-
-       System.out.println("Start write now");
-       long start = System.currentTimeMillis();
 
        // Write key with random name.
        Map<String, CompletableFuture<Boolean>> map = writeByHeapByteBuffer(paths, outs, executor);
