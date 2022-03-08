@@ -50,9 +50,17 @@ public class HdfsPerformance {
   }
 
   protected static void dropCache() throws InterruptedException, IOException {
-    String[] cmds = {"/bin/sh","-c","echo 3 > /proc/sys/vm/drop_caches"};
+    String[] cmds = {"/bin/sh","-c","sync; echo 3 > /proc/sys/vm/drop_caches"};
     Process pro = Runtime.getRuntime().exec(cmds);
     pro.waitFor();
+
+    final long safeTime = 5 * 1000L; // sleep extra 5 seconds.
+    final long filesPerDisk = (numFiles - 1) / storageDir.length + 1;
+    final long diskSpeed = 100 * 1000 * 1000 / 1000; // 100 MB / 1000ms
+    final long msPerFile = (fileSizeInBytes - 1) / diskSpeed + 1;
+    final long msSleep = filesPerDisk * msPerFile + safeTime;
+    System.out.println("sleeping " + msSleep + "ms to wait for disk write");
+    Thread.sleep(filesPerDisk * msPerFile); // wait disk buffer write-back
   }
 
   private static CompletableFuture<Long> writeFileAsync(String path, ExecutorService executor) {
@@ -166,9 +174,8 @@ public class HdfsPerformance {
        dropCache();
 
        Configuration conf = new Configuration();
-       conf.set("fs.defaultFS", "hdfs://localhost:9000");
+       conf.set("fs.defaultFS", "hdfs://9.29.173.57:9000");
        conf.setInt("dfs.replication", 3);
-       //conf.setInt("dfs.replication", 1);
        FileSystem fs = FileSystem.get(conf);
 
        System.out.println("Start write now");
