@@ -1,1 +1,3 @@
+org/apache/CommandArgs.class
 org/apache/HdfsPerformance.class
+org/apache/LaunchSync.class

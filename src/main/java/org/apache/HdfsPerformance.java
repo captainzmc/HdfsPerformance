@@ -1,5 +1,6 @@
 package org.apache;
 
+import com.beust.jcommander.JCommander;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -19,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -162,11 +162,19 @@ public class HdfsPerformance {
     return (int)(numFiles < maxThreadNum ? numFiles : maxThreadNum);
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
+    CommandArgs commandArgs = new CommandArgs();
+
+    JCommander.newBuilder().addObject(commandArgs).build().parse(args);
+
+    LaunchSync launchSync = new LaunchSync(55667, commandArgs.groups);
+    launchSync.start();
+
      try {
-       numFiles = Integer.parseInt(args[0]);
-       fileSizeInBytes = Integer.parseInt(args[1]);
-       bufferSizeInBytes = Integer.parseInt(args[2]);
+       numFiles = commandArgs.fileNum;
+       fileSizeInBytes = commandArgs.fileSize;
+       bufferSizeInBytes = commandArgs.chunkSize;
+       System.out.println("fileSize:" + fileSizeInBytes);
        System.out.println("numFiles:" + numFiles);
        createDirs();
        final ExecutorService executor = Executors.newFixedThreadPool(getNumThread());
@@ -180,9 +188,12 @@ public class HdfsPerformance {
        FileSystem fs = FileSystem.get(conf);
 
        // wait for sync signal
-       System.out.println("=== input a new line to start the test ===");
-       System.out.print(">>> ");
-       new Scanner(System.in).nextLine();
+       launchSync.sendReady();
+       System.out.println("=== Wait All Client Ready ===");
+       System.out.println("...");
+       launchSync.waitAllReady();
+       System.out.println("=== All Ready! Start Test ===");
+
        System.out.println("Start write now");
        long start = System.currentTimeMillis();
 
