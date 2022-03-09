@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -178,6 +179,10 @@ public class HdfsPerformance {
        conf.setInt("dfs.replication", 3);
        FileSystem fs = FileSystem.get(conf);
 
+       // wait for sync signal
+       System.out.println("=== input a new line to start the test ===");
+       System.out.print(">>> ");
+       new Scanner(System.in).nextLine();
        System.out.println("Start write now");
        long start = System.currentTimeMillis();
 
